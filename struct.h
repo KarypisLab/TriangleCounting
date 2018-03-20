@@ -20,8 +20,8 @@ typedef struct {
 
   /* timers */
   double timer_global;
-  double pptimer;
-  double tctimer;
+  double timer_pp;
+  double timer_tc;
 } vault_t; 
 
 

@@ -45,16 +45,12 @@ int main(int argc, char *argv[])
   gk_stopwctimer(vault->timer_global);
 
   printf("\nResults...\n");
-  /*
-  printf(" #triangles: %12"PRId64"; rate: %10.2lf MT/sec\n", ntriangles, 
-      ((double)ntriangles)/((double)1e6*gk_getwctimer(vault->tctimer))); 
-  */
   printf("    #probes: %12"PRIu64"; rate: %10.2lf MP/sec\n", vault->nprobes, 
-      ((double)vault->nprobes)/((double)1e6*gk_getwctimer(vault->tctimer))); 
+      ((double)vault->nprobes)/((double)1e6*gk_getwctimer(vault->timer_tc))); 
 
   printf("\nTimings...\n");
-  printf("     preprocessing: %9.3lfs\n", gk_getwctimer(vault->pptimer));
-  printf(" triangle counting: %9.3lfs\n", gk_getwctimer(vault->tctimer));
+  printf("     preprocessing: %9.3lfs\n", gk_getwctimer(vault->timer_pp));
+  printf(" triangle counting: %9.3lfs\n", gk_getwctimer(vault->timer_tc));
   printf("    total (/x i/o): %9.3lfs\n", gk_getwctimer(vault->timer_global));
   printf("-----------------\n");
 

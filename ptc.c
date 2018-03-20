@@ -1,6 +1,6 @@
 /*!
 \file
-\brief The various OpenMP triangle counting routines
+\brief The OpenMP triangle counting routine
 \date Started 1/14/2018
 \author George
 \version\verbatim $Id: cmdline.c 20946 2017-05-10 23:12:48Z karypis $ \endverbatim
@@ -52,8 +52,6 @@ gk_graph_t *ptc_Preprocess(params_t *params, vault_t *vault)
   csrange = 16*((csrange+15)/16); /* get the per thread arrays to be alligned 
                                      at the start of the cache line */
 
-  gk_startwctimer(vault->timer_6);
-
   gcounts = gk_i32malloc(nthreads*csrange, "gcounts");
   psums   = gk_zmalloc(nthreads, "psums");
 
@@ -65,7 +63,11 @@ gk_graph_t *ptc_Preprocess(params_t *params, vault_t *vault)
     int32_t ti, di, ci, dstart, dend;
     int32_t *counts, *buffer;
     ssize_t ej, ejend, psum, chunksize;
+#if defined(_OPENMP)
     int mytid = omp_get_thread_num();
+#else
+    int mytid = 0;
+#endif
 
     vistart = mytid*((nvtxs+nthreads-1)/nthreads);
     viend   = gk_min(nvtxs, (mytid+1)*((nvtxs+nthreads-1)/nthreads));
@@ -154,16 +156,12 @@ gk_graph_t *ptc_Preprocess(params_t *params, vault_t *vault)
       }
     }
     psums[mytid] = nchunks+1;
-    //printf("mytid: %d, nchunks: %d [%zd]\n", mytid, nchunks+1, (nxadj[viend]-nxadj[vistart])/chunksize);
 
     #pragma omp barrier
     #pragma omp single
     for (ti=1; ti<nthreads; ti++)
       psums[ti] += psums[ti-1];
     #pragma omp barrier
-
-    //#pragma omp single
-    //printf("bsize: %d, total #chunks: %zd, chunksize: %zd\n", bsize, psums[nthreads-1], chunksize);
 
     #pragma omp single
     chunkptr = gk_i32malloc(psums[nthreads-1]+1, "chunkptr");
@@ -193,12 +191,7 @@ gk_graph_t *ptc_Preprocess(params_t *params, vault_t *vault)
     #pragma omp barrier
     */
 
-    /* create the reordered/sorted graph */
-    #pragma omp single
-    gk_startwctimer(vault->timer_7);
-
-    
-    /* process the chunks in parallel */
+    /* create the reordered/sorted graph by processing the chunks in parallel */
     #pragma omp for schedule(dynamic, 1) nowait
     for (ci=nchunks-1; ci>=0; ci--) {
       for (vi=chunkptr[ci]; vi<chunkptr[ci+1]; vi++) {
@@ -213,11 +206,7 @@ gk_graph_t *ptc_Preprocess(params_t *params, vault_t *vault)
       }
     }
 
-    #pragma omp single
-    gk_stopwctimer(vault->timer_7);
-
   }
-  gk_stopwctimer(vault->timer_6);
 
   gk_free((void **)&perm, &iperm, &gcounts, &psums, &chunkptr, LTERM);
 
@@ -295,7 +284,11 @@ int64_t ptc_MapJIK(params_t *params, vault_t *vault)
     ssize_t ei, eiend, eistart, ej, ejend, ejstart;
     int32_t l, nc;
     int32_t l2=1, hmsize=(1<<(l2+4))-1, *hmap;
-    int32_t mytid = omp_get_thread_num();
+#if defined(_OPENMP)
+    int mytid = omp_get_thread_num();
+#else
+    int mytid = 0;
+#endif
 
     hmap = gk_i32smalloc(maxhmsize+1, 0, "hmap");
 

@@ -51,7 +51,7 @@ ifneq ($(cc), not-set)
     CONFIG_FLAGS += -DCMAKE_C_COMPILER=$(cc)
 endif
 
-PKGNAME=gktc
+CONFIG_FLAGS += -DPKGNAME=gktc
 
 define run-config
 mkdir -p $(BUILDDIR)
@@ -77,7 +77,4 @@ distclean:
 remake:
 	find . -name CMakeLists.txt -exec touch {} ';'
 
-dist:
-	utils/mkdist.sh $(PKGNAME)
-
-.PHONY: config distclean all clean install uninstall remake dist
+.PHONY: config distclean all clean install uninstall remake

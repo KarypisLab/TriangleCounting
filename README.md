@@ -6,7 +6,7 @@ OpenMP-based parallel program for counting the number of triangles in a sparse g
  - CMake 2.8, found at http://www.cmake.org/, as well as GNU make. 
  - Download, build, and install [GKlib](https://github.com/KarypisLab/GKlib).
 
-Assumming that the above are available, two commands should suffice to 
+Assuming that the above are available, two commands should suffice to 
 build the software:
 ```
 make config 
@@ -26,6 +26,7 @@ Configuration options are:
 cc=[compiler]     - The C compiler to use [default: gcc]
 prefix=[PATH]     - Set the installation prefix [default: ~/local]
 gklib_path=[PATH] - Where GKlib was installed [default: ~/local]
+openmp=not-set    - To build a serial version
 ```
 
 
@@ -41,6 +42,29 @@ For usage information just type
 ```
 gktc -help
 ```
+and here is a sample run:
+```
+gktc -nthreads=4 test/p2p-Gnutella31.metis
+Reading graph test/p2p-Gnutella31.metis...
+
+-----------------
+  infile: test/p2p-Gnutella31.metis
+  #nvtxs: 62586
+ #nedges: 295784
+nthreads: 4
+
+& compatible maxhmsize: 255, startv: 23
+
+Results...
+    #probes:       209251; rate:     249.98 MP/sec
+
+Timings...
+     preprocessing:     0.002s
+ triangle counting:     0.001s
+    total (/x i/o):     0.003s
+-----------------
+```
+
 
 ## Other make commands
     make uninstall 
@@ -54,54 +78,61 @@ gktc -help
 
 
 ## Performance 
-The following shows a sample of gktc's performance on Intel's KnightsLanding
+The following shows a sample of gktc's performance on Intel's Knights Landing
 processor:
 
 ```
+  total: total time excluding I/O
+    ppt: pre-processing time
+    tct: triangle counting time
+speedup: relative to p=1
+
 rmat scale25 
 ----------------------------------------
-#p     total    ppt      tct   speedup 
-1      767.4  141.9    625.5   
-5      154.4   29.1    125.2     5.0x 
-10      77.2   14.5     62.6     9.9x
-20      38.6    7.3     31.2    19.9x
-40      19.6    3.7     16.1    39.2x
-68      12.2    2.2      9.9    62.9x
-136      9.3    1.7      7.6    82.5x
-272     10.1    1.5      8.6    76.0x
+#p     total     ppt       tct   speedup 
+1      767.4s  141.9s    625.5s   
+5      154.4s   29.1s    125.2s     5.0x 
+10      77.2s   14.5s     62.6s     9.9x
+20      38.6s    7.3s     31.2s    19.9x
+40      19.6s    3.7s     16.1s    39.2x
+68      12.2s    2.2s      9.9s    62.9x
+136      9.3s    1.7s      7.6s    82.5x
+272     10.1s    1.5s      8.6s    76.0x
 
 twitter 
 ----------------------------------------
-#p     total    ppt      tct   speedup    
-1     1422.6  307.7   1114.9  
-5      285.7   62.3    223.2     5.0x 
-10     143.4   31.2    112.1     9.9x 
-20      71.4   15.6     55.8    19.9x 
-40      37.1    7.9     29.1    38.4x 
-68      23.1    4.8     18.3    61.6x 
-136     17.1    3.4     13.6    83.2x 
-272     19.3    3.2     16.0    73.7x 
+#p     total     ppt       tct   speedup    
+1     1422.6s  307.7s   1114.9s  
+5      285.7s   62.3s    223.2s     5.0x 
+10     143.4s   31.2s    112.1s     9.9x 
+20      71.4s   15.6s     55.8s    19.9x 
+40      37.1s    7.9s     29.1s    38.4x 
+68      23.1s    4.8s     18.3s    61.6x 
+136     17.1s    3.4s     13.6s    83.2x 
+272     19.3s    3.2s     16.0s    73.7x 
 
 friendster 
 ----------------------------------------
-#p     total    ppt      tct   speedup  
-1     1618.5  421.3   1196.7   
-5      316.8   84.8    231.5     5.1x  
-10     159.0   42.5    116.1    10.2x 
-20      79.5   21.3     57.8    20.4x
-40      40.6   10.7     29.4    39.9x 
-68      25.5    6.5     18.4    63.5x 
-136     16.9    4.5     11.7    95.8x 
-272     13.5    3.6      8.9   119.9x 
+#p     total     ppt       tct   speedup  
+1     1618.5s  421.3s   1196.7s   
+5      316.8s   84.8s    231.5s     5.1x  
+10     159.0s   42.5s    116.1s    10.2x 
+20      79.5s   21.3s     57.8s    20.4x
+40      40.6s   10.7s     29.4s    39.9x 
+68      25.5s    6.5s     18.4s    63.5x 
+136     16.9s    4.5s     11.7s    95.8x 
+272     13.5s    3.6s      8.9s   119.9x 
 ```
 
 ## Citing 
 The parallel algorithm implemented is based on the one described in
 
-["Exploring Optimizations on Shared-memory Platforms for Parallel Triangle Counting
-Algorithms". Ancy Sarah Tom, Narayanan Sundaram, Nesreen K. Ahmed, Shaden Smith, 
+[__"Exploring Optimizations on Shared-memory Platforms for Parallel Triangle Counting
+Algorithms."__ Ancy Sarah Tom, Narayanan Sundaram, Nesreen K. Ahmed, Shaden Smith, 
 Stijn Eyerman, Midhunchandra Kodiyath, Ibrahim Hur, Fabrizio Petrini, and George
 Karypis. IEEE High Performance Extreme Computing Conference (HPEC),
-2017](http://glaros.dtc.umn.edu/gkhome/node/1214), which was one of the finalists for
-the [GraphChallenge 2017 competition](http://graphchallenge.mit.edu/).
+2017](http://glaros.dtc.umn.edu/gkhome/node/1214)
+
+This was one of the finalists for the [GraphChallenge 2017
+competition](http://graphchallenge.mit.edu/).
 
