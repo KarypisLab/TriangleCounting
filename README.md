@@ -56,7 +56,7 @@ nthreads: 4
 & compatible maxhmsize: 255, startv: 23
 
 Results...
-    #probes:       209251; rate:     249.98 MP/sec
+  #triangles:         2024; #probes:       209251; rate:     248.56 MP/sec
 
 Timings...
      preprocessing:     0.002s
