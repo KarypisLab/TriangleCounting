@@ -46,7 +46,8 @@ int main(int argc, char *argv[])
   gk_stopwctimer(vault->timer_global);
 
   printf("\nResults...\n");
-  printf("    #probes: %12"PRIu64"; rate: %10.2lf MP/sec\n", vault->nprobes, 
+  printf("  #triangles: %12"PRId64"; #probes: %12"PRIu64"; rate: %10.2lf MP/sec\n", 
+      ntriangles, vault->nprobes, 
       ((double)vault->nprobes)/((double)1e6*gk_getwctimer(vault->timer_tc))); 
 
   printf("\nTimings...\n");
