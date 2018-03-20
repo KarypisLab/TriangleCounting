@@ -35,6 +35,7 @@ int main(int argc, char *argv[])
 #if defined(_OPENMP)
   printf("nthreads: %d\n", omp_get_max_threads());
 #else
+  params->nthreads = 1;
   printf("nthreads: 1 (was not compiled with openmp support)\n");
 #endif
   printf("\n");
