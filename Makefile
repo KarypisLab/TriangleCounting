@@ -51,8 +51,7 @@ ifneq ($(cc), not-set)
     CONFIG_FLAGS += -DCMAKE_C_COMPILER=$(cc)
 endif
 
-VERNUM=0.1.0
-PKGNAME=gktc-$(VERNUM)
+PKGNAME=gktc
 
 define run-config
 mkdir -p $(BUILDDIR)
@@ -61,7 +60,7 @@ endef
 
 all clean install:
 	@if [ ! -f $(BUILDDIR)/Makefile ]; then \
-		more BUILD.txt; \
+		more README.md; \
 	else \
 	  	make -C $(BUILDDIR) $@ $(MAKEFLAGS); \
 	fi
