@@ -133,6 +133,6 @@ Stijn Eyerman, Midhunchandra Kodiyath, Ibrahim Hur, Fabrizio Petrini, and George
 Karypis. IEEE High Performance Extreme Computing Conference (HPEC),
 2017](http://glaros.dtc.umn.edu/gkhome/node/1214)
 
-This was one of the finalists for the [GraphChallenge 2017
-competition](http://graphchallenge.mit.edu/).
+This was one of the finalists for the [GraphChallenge
+2017](http://graphchallenge.mit.edu/) competition.
 
