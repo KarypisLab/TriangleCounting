@@ -82,6 +82,7 @@ The following shows a sample of gktc's performance on Intel's Knights Landing
 processor:
 
 ```
+     #p: # of threads (this KNL has 68 cores)
   total: total time excluding I/O
     ppt: pre-processing time
     tct: triangle counting time
