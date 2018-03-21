@@ -29,7 +29,6 @@ gklib_path=[PATH] - Where GKlib was installed [default: ~/local]
 openmp=not-set    - To build a serial version
 ```
 
-
 ## Building and installing
 To build and install, run the following
 ```
@@ -37,12 +36,51 @@ make
 make install
 ```
 
+## Other make commands
+    make uninstall 
+         Removes all files installed by 'make install'.
+   
+    make clean 
+         Removes all object files but retains the configuration options.
+   
+    make distclean 
+         Performs clean and completely removes the build directory.
+
+
+## Runing the program 
 By default, the binary, called _gktc_, will be installed in ~/local/bin.
 For usage information just type
 ```
 gktc -help
+
+Usage: gktc [options] infile
+
+ Options
+  -iftype=text
+     Specifies the format of the input file.
+     Possible values are:
+        metis   Metis format [default]
+        tsv     tsv format (i, j, v)
+
+  -nthreads=int
+     Specifies the number of threads to use.
+     If OMP_NUM_THREADS is defined, the default value is set to
+     the value of OMP_NUM_THREADS, otherwise it is set to the
+     value returned by omp_get_max_threads().
+
+  -help
+     Prints this message.
 ```
-and here is a sample run:
+
+The program supports two formats for its input files: 
+- The one used by the [Metis](http://www.cs.umn.edu/~metis) graph 
+  partitioning program.
+- The tsv format used by the graphs in the 
+  [GraphChallenge 2017](http://graphchallenge.mit.edu/) competition.
+Note that the graph has to be undirected and it needs to include both the pairs of
+edges (i.e., (u,v) and (v,u)).
+
+Here is the output of a sample run:
 ```
 gktc -nthreads=4 test/p2p-Gnutella31.metis
 Reading graph test/p2p-Gnutella31.metis...
@@ -64,17 +102,6 @@ Timings...
     total (/x i/o):     0.003s
 -----------------
 ```
-
-
-## Other make commands
-    make uninstall 
-         Removes all files installed by 'make install'.
-   
-    make clean 
-         Removes all object files but retains the configuration options.
-   
-    make distclean 
-         Performs clean and completely removes the build directory.
 
 
 ## Performance 

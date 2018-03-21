@@ -34,10 +34,10 @@ static gk_StringMap_t iftype_options[] = {
 static char helpstr[][100] =
 {
 " ",
-"Usage: tc [options] infile",
+"Usage: gktc [options] infile",
 " ",        
 " Options",
-"  -inf=text",
+"  -iftype=text",
 "     Specifies the format of the input file. ",
 "     Possible values are:",
 "        metis   Metis format [default]",
@@ -45,7 +45,9 @@ static char helpstr[][100] =
 " ",
 "  -nthreads=int",
 "     Specifies the number of threads to use.",
-"     Default value is 1.",
+"     If OMP_NUM_THREADS is defined, the default value is set to",
+"     the value of OMP_NUM_THREADS, otherwise it is set to the",
+"     value returned by omp_get_max_threads().",
 " ",
 "  -help",
 "     Prints this message.",
@@ -73,9 +75,15 @@ params_t *getcmdline_params(int argc, char *argv[])
   printf("\n");
 
   /* initialize the params data structure */
-  params->infile  = NULL;
+  params->infile   = NULL;
   params->iftype   = IFTYPE_METIS;
   params->nthreads = 1;
+
+#if defined(_OPENMP)
+  params->nthreads = omp_get_max_threads();
+  if (getenv("OMP_NUM_THREADS") != NULL) 
+    params->nthreads = atoi(getenv("OMP_NUM_THREADS"));
+#endif
 
 
   /* Parse the command line arguments  */
@@ -112,6 +120,9 @@ params_t *getcmdline_params(int argc, char *argv[])
     printf("Missing required parameters.\n  Use %s -help for a summary of the options.\n", argv[0]);
     exit(EXIT_FAILURE);
   }
+
+  if (params->nthreads <= 0)
+    errexit("OMP_NUM_THREADS has an invalid value of %d\n", params->nthreads);
 
   params->infile = gk_strdup(argv[gk_optind++]);
 
