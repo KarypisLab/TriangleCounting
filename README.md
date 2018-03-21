@@ -77,7 +77,7 @@ The program supports two formats for its input files:
   partitioning program.
 - The tsv format used by the graphs in the 
   [GraphChallenge 2017](http://graphchallenge.mit.edu/) competition.
-Note that the graph has to be undirected and it needs to include both the pairs of
+Note that the graph has to be undirected and it needs to include both pairs of
 edges (i.e., (u,v) and (v,u)).
 
 Here is the output of a sample run:
