@@ -64,9 +64,7 @@ Usage: gktc [options] infile
 
   -nthreads=int
      Specifies the number of threads to use.
-     If OMP_NUM_THREADS is defined, the default value is set to
-     the value of OMP_NUM_THREADS, otherwise it is set to the
-     value returned by omp_get_max_threads().
+     The default value is set to the value returned by omp_get_max_threads().
 
   -help
      Prints this message.
