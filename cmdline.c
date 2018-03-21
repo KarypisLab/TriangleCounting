@@ -81,10 +81,7 @@ params_t *getcmdline_params(int argc, char *argv[])
 
 #if defined(_OPENMP)
   params->nthreads = omp_get_max_threads();
-  if (getenv("OMP_NUM_THREADS") != NULL) 
-    params->nthreads = atoi(getenv("OMP_NUM_THREADS"));
 #endif
-
 
   /* Parse the command line arguments  */
   while ((c = gk_getopt_long_only(argc, argv, "", long_options, &option_index)) != -1) {
@@ -120,9 +117,6 @@ params_t *getcmdline_params(int argc, char *argv[])
     printf("Missing required parameters.\n  Use %s -help for a summary of the options.\n", argv[0]);
     exit(EXIT_FAILURE);
   }
-
-  if (params->nthreads <= 0)
-    errexit("OMP_NUM_THREADS has an invalid value of %d\n", params->nthreads);
 
   params->infile = gk_strdup(argv[gk_optind++]);
 
