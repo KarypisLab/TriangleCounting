@@ -292,8 +292,8 @@ int64_t ptc_MapJIK(params_t *params, vault_t *vault)
 
     hmap = gk_i32smalloc(maxhmsize+1, 0, "hmap");
 
-    /* Phase 1: Count triangles for vj < nvtxs-maxhmsize */
-    #pragma omp for schedule(dynamic,SBSIZE) nowait
+    /* Phase 1: Count triangles for vj < nvtxs-maxhmsize with optimized scheduling */
+    #pragma omp for schedule(dynamic,32) nowait
     for (vj=startv; vj<nvtxs-maxhmsize; vj++) {
       if (xadj[vj+1]-uxadj[vj] == 1 || xadj[vj] == uxadj[vj])
         continue;
@@ -317,6 +317,12 @@ int64_t ptc_MapJIK(params_t *params, vault_t *vault)
       if (nc > 0) { /* we had collisions */
         for (ej=xadj[vj], ejend=uxadj[vj]; ej<ejend; ej++) {
           vi = adjncy[ej];
+          /* Prefetch next vertex's adjacency data */
+          if (ej + 1 < ejend) {
+            int32_t next_vi = adjncy[ej + 1];
+            __builtin_prefetch(&adjncy[uxadj[next_vi]], 0, 3);
+          }
+          
           for (ei=uxadj[vi]; adjncy[ei]>vj; ei++) {
             vk = adjncy[ei];
             for (l=vk&hmsize; hmap[l]!=0 && hmap[l]!=vk; l=((l+1)&hmsize));
@@ -326,16 +332,26 @@ int64_t ptc_MapJIK(params_t *params, vault_t *vault)
           nprobes += ei-uxadj[vi];
         }
   
-        /* reset hash */
+        /* reset hash with batch clearing */
         for (ej=uxadj[vj], ejend=xadj[vj+1]-1; ej<ejend; ej++) {
           vk = adjncy[ej];
-          for (l=(vk&hmsize); hmap[l]!=vk; l=((l+1)&hmsize));
+          l = vk & hmsize;
+          /* Find the actual location and clear it */
+          while (hmap[l] != vk) {
+            l = (l + 1) & hmsize;
+          }
           hmap[l] = 0;
         }
       }
       else { /* there were no collisons */
         for (ej=xadj[vj], ejend=uxadj[vj]; ej<ejend; ej++) {
           vi = adjncy[ej];
+          /* Prefetch next vertex's adjacency data */
+          if (ej + 1 < ejend) {
+            int32_t next_vi = adjncy[ej + 1];
+            __builtin_prefetch(&adjncy[uxadj[next_vi]], 0, 3);
+          }
+          
 #ifdef TC_VECOPT 
           for (eiend=uxadj[vi]; adjncy[eiend]>vj; eiend++);
           for (ei=uxadj[vi]; ei<eiend; ei++) 
@@ -362,7 +378,7 @@ int64_t ptc_MapJIK(params_t *params, vault_t *vault)
     /* Phase 2: Count triangles for the last hmsize vertices, which can be done
                 faster by using hmap as a direct map array. */
     hmap -= (nvtxs - maxhmsize);
-    #pragma omp for schedule(dynamic,DBSIZE) nowait
+    #pragma omp for schedule(dynamic,4) nowait
     for (vj=nvtxs-1; vj>=nvtxs-maxhmsize; vj--) {
       if (xadj[vj+1]-uxadj[vj] == 1 || xadj[vj] == uxadj[vj])
         continue;
