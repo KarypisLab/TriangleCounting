@@ -8,8 +8,8 @@
 
 #include "tc.h"
 
-#define SBSIZE  64
-#define DBSIZE  8
+#define SBSIZE  32
+#define DBSIZE  4
 
 
 /*************************************************************************/
@@ -42,7 +42,7 @@ gk_graph_t *ptc_Preprocess(params_t *params, vault_t *vault)
   iperm = gk_i32malloc(nvtxs, "iperm");  /* iperm[new-vtx-num] => old-vtx-num */
 
   /* Determine maxdegree/csrange */
-  #pragma omp parallel for schedule(static,4096) default(none) \
+  #pragma omp parallel for schedule(static,1024) default(none) \
      shared(nvtxs, xadj) \
      reduction(max: maxdegree)
   for (vi=0; vi<nvtxs; vi++) 
@@ -92,9 +92,12 @@ gk_graph_t *ptc_Preprocess(params_t *params, vault_t *vault)
     psums[mytid] = psum;
     #pragma omp barrier
 
+    /* Use more efficient prefix sum computation */
     #pragma omp single
-    for (ti=1; ti<nthreads; ti++)
-      psums[ti] += psums[ti-1];
+    {
+      for (ti=1; ti<nthreads; ti++)
+        psums[ti] += psums[ti-1];
+    }
     #pragma omp barrier
 
     /* Compute the actual prefix sums of the range assigned to each thread.
@@ -117,12 +120,12 @@ gk_graph_t *ptc_Preprocess(params_t *params, vault_t *vault)
     /* TODO: This can be optimized by pre-sorting the per-thread vertices according 
              to their degree and processing them in increasing degree order */
     for (vi=vistart; vi<viend; vi++) {
-      perm[vi] = counts[xadj[vi+1]-xadj[vi]]++;
-      nxadj[perm[vi]] = xadj[vi+1]-xadj[vi]+1; /* the +1 is for the diagonal */
-      iperm[perm[vi]] = vi;
+      int32_t degree = xadj[vi+1]-xadj[vi];
+      int32_t new_vi = counts[degree]++;
+      perm[vi] = new_vi;
+      nxadj[new_vi] = degree+1; /* the +1 is for the diagonal */
+      iperm[new_vi] = vi;
     }
-    #pragma omp barrier
-
     #pragma omp barrier
     /* compute the local sums and their prefix sums */
     for (psum=0, vi=vistart; vi<viend; vi++)
@@ -293,7 +296,7 @@ int64_t ptc_MapJIK(params_t *params, vault_t *vault)
     hmap = gk_i32smalloc(maxhmsize+1, 0, "hmap");
 
     /* Phase 1: Count triangles for vj < nvtxs-maxhmsize with optimized scheduling */
-    #pragma omp for schedule(dynamic,32) nowait
+    #pragma omp for schedule(dynamic,SBSIZE) nowait
     for (vj=startv; vj<nvtxs-maxhmsize; vj++) {
       if (xadj[vj+1]-uxadj[vj] == 1 || xadj[vj] == uxadj[vj])
         continue;
@@ -378,7 +381,7 @@ int64_t ptc_MapJIK(params_t *params, vault_t *vault)
     /* Phase 2: Count triangles for the last hmsize vertices, which can be done
                 faster by using hmap as a direct map array. */
     hmap -= (nvtxs - maxhmsize);
-    #pragma omp for schedule(dynamic,4) nowait
+    #pragma omp for schedule(dynamic,DBSIZE) nowait
     for (vj=nvtxs-1; vj>=nvtxs-maxhmsize; vj--) {
       if (xadj[vj+1]-uxadj[vj] == 1 || xadj[vj] == uxadj[vj])
         continue;
