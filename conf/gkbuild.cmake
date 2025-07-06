@@ -28,7 +28,23 @@ endif(CYGWIN)
 if(CMAKE_COMPILER_IS_GNUCC)
 # GCC opts.
   set(GK_COPTIONS "${GK_COPTIONS} -std=c99 -fno-strict-aliasing")
-  set(GK_COPTIONS "${GK_COPTIONS} -march=native")
+  
+  # Handle architecture-specific optimizations
+  if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm64|aarch64")
+    # ARM64/Apple Silicon specific optimizations
+    set(GK_COPTIONS "${GK_COPTIONS} -mcpu=native")
+  elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
+    # x86_64 specific optimizations
+    set(GK_COPTIONS "${GK_COPTIONS} -march=native -mtune=native")
+  else()
+    # Generic optimizations for other architectures
+    set(GK_COPTIONS "${GK_COPTIONS} -mtune=generic")
+  endif()
+  
+  # Enhanced optimization flags for better performance
+  set(GK_COPTIONS "${GK_COPTIONS} -ftree-vectorize -ffast-math -funroll-loops")
+  set(GK_COPTIONS "${GK_COPTIONS} -fprefetch-loop-arrays -fomit-frame-pointer")
+  set(GK_COPTIONS "${GK_COPTIONS} -falign-functions=32 -falign-loops=32")
   if(NOT MINGW)
       set(GK_COPTIONS "${GK_COPTIONS} -fPIC")
   endif(NOT MINGW)
@@ -40,7 +56,9 @@ elseif(${CMAKE_C_COMPILER_ID} MATCHES "Sun")
 endif(CMAKE_COMPILER_IS_GNUCC)
 
 if(${CMAKE_C_COMPILER_ID} STREQUAL "Intel")
-  set(GK_COPTIONS "${GK_COPTIONS} -xHost")
+  set(GK_COPTIONS "${GK_COPTIONS} -xHost -ipo -no-prec-div -fp-model fast=2")
+  set(GK_COPTIONS "${GK_COPTIONS} -qopt-prefetch=3 -qopt-mem-layout-trans=3")
+  set(GK_COPTIONS "${GK_COPTIONS} -qopenmp-simd -qopt-report=5")
   #  set(GK_COPTIONS "${GK_COPTIONS} -fast")
 endif()
 
@@ -65,7 +83,9 @@ if(GDB)
   set(GK_COPTS "${GK_COPTS} -g")
   set(GK_COPTIONS "${GK_COPTIONS} -Werror")
 else()
-  set(GK_COPTS "-O3")
+  set(GK_COPTS "-O3 -flto")
+  # Additional aggressive optimizations for release builds
+  # Note: -fwhole-program removed as it conflicts with -flto in newer GCC
 endif(GDB)
 
 
