@@ -272,12 +272,12 @@ int64_t ptc_MapJIK(params_t *params, vault_t *vault)
     }
   }
 
+  printf("& compatible maxhmsize: %"PRId32", startv: %d\n", maxhmsize, startv);
+
   /* convert the hash-map is converted into a format that is compatible with a 
      bitwise AND operation */
   for (l2=1; maxhmsize>(1<<l2); l2++);
   maxhmsize = (1<<(l2+4))-1;
-
-  printf("& compatible maxhmsize: %"PRId32", startv: %d\n", maxhmsize, startv);
 
   #pragma omp parallel default(none) \
     shared(params, vault, nvtxs, xadj, adjncy, uxadj, maxhmsize, startv, stdout) \
